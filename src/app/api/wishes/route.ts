@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { getPerson, listPeople, personByApiKey } from "@/lib/db";
 import { getT } from "@/i18n/server";
 import { addableLists, canManage } from "@/lib/visibility";
-import { createWishFromInput } from "@/lib/wishes";
+import { createWishFromInput, findUrl, urlFromPageHead } from "@/lib/wishes";
 
 /** A shop page's <head> runs to 100–300 kB; the whole DOM is not wanted. */
 const MAX_BODY = 600_000;
@@ -52,8 +52,20 @@ export async function POST(request: Request) {
   } catch {
     return Response.json({ message: t.expectedJson }, { status: 400 });
   }
-  const input = [body.url, body.text].filter((x) => typeof x === "string" && x.trim()).join(" ").slice(0, 2000);
-  if (!input) return Response.json({ message: t.noLink }, { status: 400 });
+  // Shortcuts may send a list where one link was meant.
+  const asText = (x: unknown) => (Array.isArray(x) ? x.filter((v) => typeof v === "string").join(" ") : x);
+  let input = [asText(body.url), body.text].filter((x) => typeof x === "string" && x.trim()).join(" ").slice(0, 2000);
+  // An empty link field, but Safari's head says where the page is.
+  if (!findUrl(input) && typeof body.html === "string") {
+    const fromHead = urlFromPageHead(body.html);
+    if (fromHead) input = `${fromHead} ${input}`.trim();
+  }
+  if (!input) {
+    // What arrived, never its content: enough to see which field the Shortcut left empty.
+    const shape = (x: unknown) => (typeof x === "string" ? `string(${x.length})` : Array.isArray(x) ? `array(${x.length})` : typeof x);
+    console.log(`api/wishes: no link; url=${shape(body.url)} text=${shape(body.text)} html=${shape(body.html)} til=${shape(body.til)}`);
+    return Response.json({ message: t.noLink }, { status: 400 });
+  }
 
   let owner = getPerson(adult.id)!;
   if (typeof body.til === "string" && body.til.trim()) {

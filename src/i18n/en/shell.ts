@@ -4,7 +4,7 @@ export const shell: Messages["shell"] = {
   appName: "Hushlist",
   homeScreenName: "Hushlist",
   description: "The family's wishlists",
-  shortcutFile: "Hushlist.shortcut",
+  shortcutFile: "Add to Hushlist.shortcut",
   installHint: {
     title: "Put Hushlist on your Home Screen",
     close: "Close",

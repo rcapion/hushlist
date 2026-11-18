@@ -5,7 +5,46 @@ On an iPhone, the quickest way to wish for something is from the share sheet:
 be a share target on iOS, so this is an Apple Shortcut that posts the link to
 `/api/wishes` with a personal key.
 
-There are two ways to get it.
+There are three ways to get it. Settings offers the first one that applies.
+
+## 0. The shared Shortcut (nothing to build)
+
+One Shortcut serves every install: on import it asks for two things, your
+key and your Hushlist's address, and Settings shows both with Copy buttons.
+It is published as an iCloud link, one per language, in
+`src/lib/shortcut.ts` (`PUBLIC_SHORTCUT_LINKS`). If that list has a link for
+your language, Settings → **Wish from your iPhone** → **Get the shortcut**
+opens it in the Shortcuts app, also from the Home Screen app.
+
+Your household can set its own iCloud link instead (the fold-out "Share the
+shortcut with an iCloud link" in the same section), for example one with the
+address already filled in. That wins over the shared one.
+
+To make the shared links (the maintainer does this once per change):
+
+```sh
+python3 scripts/build-shortcut.py --lang en Hushlist.shortcut      # no address: it asks
+python3 scripts/build-shortcut.py --lang da Ønskeliste.shortcut
+mkdir -p signed
+shortcuts sign --mode anyone --input Hushlist.shortcut --output signed/Hushlist.shortcut
+shortcuts sign --mode anyone --input Ønskeliste.shortcut --output signed/Ønskeliste.shortcut
+```
+
+Open the signed files on the Mac to import them, leaving both questions empty,
+then in Shortcuts: right-click → Share → Copy iCloud Link. Paste the links into
+`src/lib/shortcut.ts`. **The Shortcut takes its name from the file it was
+imported from**, and the link carries that name to everyone: sign into a folder
+of its own, so the file keeps its final name. Renaming later means a new link.
+
+**Why a link and not a file:** a download from the Home Screen app leaves the
+user on a screen with no way back (WebKit bug 236943), and a new window stays
+blank. An iCloud link opens in the Shortcuts app instead.
+
+**Once per iPhone:** Settings → Apps → Shortcuts → Advanced → **Allow Running
+Scripts** (Danish: *Tillad afvikling af instrukser*). The Shortcut reads the
+page in Safari with JavaScript, which iOS refuses until this is on. On a Mac
+the same setting is under Shortcuts → Settings → Advanced, but there the
+bookmark below is simpler.
 
 ## A. Build it by hand (no Mac needed)
 

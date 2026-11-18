@@ -15,7 +15,11 @@ What it does, from the share sheet (URLs and Safari web pages):
   2. GET /api/wishes → the lists the key may write to; ask which, if more than one.
   3. POST the link (and the head) to /api/wishes, and show the answer.
 
-Usage: build-shortcut.py [--lang da|en] <origin> <output>
+Usage: build-shortcut.py [--lang da|en] [<origin>] <output>
+
+Without an origin it builds the one Shortcut for every install: it asks for the
+address as well as the key on import. That one is shared as a public iCloud
+link (PUBLIC_SHORTCUT_LINKS in src/lib/shortcut.ts, docs/SHORTCUT.md).
 
 --lang picks the language of what the Shortcut says (default en).
 """
@@ -36,12 +40,14 @@ TEXTS = {
     "da": {
         "name": "Ønskeliste",
         "whose_list": "Hvis liste?",
-        "key_question": "Din nøgle fra Ønskeliste → Indstillinger → Genvej på iPhone",
+        "key_question": "Din nøgle fra Ønskeliste → Indstillinger → Ønsk dig fra iPhone",
+        "origin_question": "Adressen på jeres ønskeliste, fx https://onsker.example.dk (står i Indstillinger → Ønsk dig fra iPhone)",
     },
     "en": {
         "name": "Hushlist",
         "whose_list": "Whose list?",
         "key_question": "Your key from Hushlist → Settings → Wish from your iPhone",
+        "origin_question": "Your Hushlist's address, e.g. https://wishes.example.com (shown under Settings → Wish from your iPhone)",
     },
 }
 
@@ -89,10 +95,11 @@ def condition(group, mode, uid=None, **params):
 
 
 def build(origin, lang="en"):
+    """origin None: one Shortcut for every install, which asks for the address on import."""
     say = TEXTS[lang]
-    api = f"{origin}/api/wishes"
     ids = {k: str(uuid.uuid4()).upper() for k in
-           "key link type js ifsafari lists listnames count choose first ifmany post message".split()}
+           "key origin link type js ifsafari lists listnames count choose first ifmany post message".split()}
+    api = f"{origin}/api/wishes" if origin else text(f"{OBJ}/api/wishes", output(ids["origin"], "Text"))
     g_safari, g_many = str(uuid.uuid4()).upper(), str(uuid.uuid4()).upper()
     shortcut_input = {"Type": "ExtensionInput"}
     key = output(ids["key"], "Text")
@@ -101,6 +108,8 @@ def build(origin, lang="en"):
     actions = [
         # 0: the key, filled in by the import question.
         action("gettext", ids["key"], WFTextActionText=""),
+        # 1: the address, filled in by the second import question (generic build only).
+        *([action("gettext", ids["origin"], WFTextActionText="")] if not origin else []),
         action("detect.link", ids["link"], WFInput=attachment(shortcut_input)),
         action("getitemtype", ids["type"], WFInput=attachment(shortcut_input)),
         # "Safari web page" / "Safari-webside": the word survives translation.
@@ -144,13 +153,11 @@ def build(origin, lang="en"):
         "WFWorkflowInputContentItemClasses": ["WFSafariWebPageContentItem", "WFURLContentItem"],
         "WFWorkflowOutputContentItemClasses": [],
         "WFWorkflowHasShortcutInputVariables": True,
-        "WFWorkflowImportQuestions": [{
-            "ActionIndex": 0,
-            "Category": "Parameter",
-            "ParameterKey": "WFTextActionText",
-            "Text": say["key_question"],
-            "DefaultValue": "",
-        }],
+        "WFWorkflowImportQuestions": [
+            {"ActionIndex": 0, "Category": "Parameter", "ParameterKey": "WFTextActionText", "Text": say["key_question"], "DefaultValue": ""},
+            *([{"ActionIndex": 1, "Category": "Parameter", "ParameterKey": "WFTextActionText", "Text": say["origin_question"], "DefaultValue": ""}]
+              if not origin else []),
+        ],
         "WFWorkflowActions": actions,
     }
 
@@ -158,8 +165,11 @@ def build(origin, lang="en"):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--lang", choices=sorted(TEXTS), default="en")
-    parser.add_argument("origin")
-    parser.add_argument("output")
+    parser.add_argument("paths", nargs="+", metavar="[origin] output",
+                        help="with an origin, a Shortcut for that one install; without, one that asks for the address")
     args = parser.parse_args()
-    with open(args.output, "wb") as f:
-        plistlib.dump(build(args.origin.rstrip("/"), args.lang), f, fmt=plistlib.FMT_BINARY)
+    if len(args.paths) > 2:
+        parser.error("at most an origin and an output")
+    origin, output_path = (args.paths[0].rstrip("/"), args.paths[1]) if len(args.paths) == 2 else (None, args.paths[0])
+    with open(output_path, "wb") as f:
+        plistlib.dump(build(origin, args.lang), f, fmt=plistlib.FMT_BINARY)

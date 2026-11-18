@@ -91,3 +91,30 @@ test("pasted lists: Notes checklists, bullets and numbers are stripped", async (
     ["🛒 Ønsker", "Lego", "Bog", "Cykel", "https://x.dk/a note", "Kaffe — mørk"],
   );
 });
+
+test("the Safari head tells where the page is when the link field is empty", async () => {
+  const { urlFromPageHead } = await import("../src/lib/wishes");
+  assert.equal(urlFromPageHead('<meta property="og:url" content="https://shop.example/p/1?a=1&amp;b=2">'), "https://shop.example/p/1?a=1&b=2");
+  assert.equal(urlFromPageHead('<meta content="https://shop.example/p/2" property="og:url">'), "https://shop.example/p/2");
+  assert.equal(urlFromPageHead('<link rel="canonical" href="https://shop.example/p/3">'), "https://shop.example/p/3");
+  assert.equal(urlFromPageHead('<script type="application/ld+json">{"@type":"Product","url":"https://shop.example/p/4"}</script>'), "https://shop.example/p/4");
+  assert.equal(urlFromPageHead('<meta property="og:url" content="javascript:alert(1)">'), null);
+  assert.equal(urlFromPageHead("<title>No address here</title>"), null);
+});
+
+test("a download name keeps its Ø for iOS, with an ASCII fallback", async () => {
+  const { contentDisposition } = await import("../src/lib/text");
+  assert.equal(contentDisposition("Ønskeliste.shortcut"), `attachment; filename="Onskeliste.shortcut"; filename*=UTF-8''%C3%98nskeliste.shortcut`);
+  assert.equal(contentDisposition("Hushlist.shortcut"), `attachment; filename="Hushlist.shortcut"; filename*=UTF-8''Hushlist.shortcut`);
+});
+
+test("only an iCloud Shortcut link is accepted as the Shortcut's address", async () => {
+  const { iCloudShortcutLink } = await import("../src/lib/text");
+  const id = "0123456789abcdef0123456789ABCDEF";
+  assert.equal(iCloudShortcutLink(` https://www.icloud.com/shortcuts/${id}/ `), `https://www.icloud.com/shortcuts/${id.toLowerCase()}`);
+  assert.equal(iCloudShortcutLink(`https://icloud.com/shortcuts/${id}`), `https://www.icloud.com/shortcuts/${id.toLowerCase()}`);
+  assert.equal(iCloudShortcutLink(`https://evil.example/shortcuts/${id}`), null);
+  assert.equal(iCloudShortcutLink(`https://www.icloud.com.evil.example/shortcuts/${id}`), null);
+  assert.equal(iCloudShortcutLink("javascript:alert(1)"), null);
+  assert.equal(iCloudShortcutLink(`https://www.icloud.com/shortcuts/${id}?x=1`), null);
+});

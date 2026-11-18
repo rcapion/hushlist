@@ -6,7 +6,7 @@ export const shell = {
   /** The web manifest's description. */
   description: "Familiens ønskelister",
   /** The signed Shortcut's download name (src/app/hushlist.shortcut): ASCII, as it goes in a header. */
-  shortcutFile: "Onskeliste.shortcut",
+  shortcutFile: "Tilføj til Ønskeliste.shortcut",
   installHint: {
     title: "Læg Ønskelisten på hjemmeskærmen",
     close: "Luk",

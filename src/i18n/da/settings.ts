@@ -62,15 +62,29 @@ export const settings = {
     title: "Ønsk dig fra iPhone",
     intro: "En genvej i Del-menuen: del en vare fra Safari eller en butiks-app, så lander den på en liste.",
     /** The name the signed Shortcut is saved under, and what shows in the share sheet. */
-    shortcutName: "Ønskeliste",
+    shortcutName: "Tilføj til Ønskeliste",
     signed: {
       step1: { before: "Tryk ", key: "Lav en nøgle", middle: " herunder, og tryk ", copy: "Kopiér", after: ". Nøglen vises kun én gang." },
       step2: {
         before: "Tryk ",
         get: "Hent genvejen",
         after: ", og åbn filen. Åbner den ikke af sig selv, så ligger den i Safaris overførsler (pilen i adresselinjen).",
+        afterLink: ". Den åbner i Genveje.",
       },
-      step3: { before: "Tryk ", add: "Tilføj genvej", after: ", og sæt nøglen ind, når den spørger." },
+      step3: {
+        before: "Tryk ",
+        add: "Tilføj genvej",
+        after: ", og sæt nøglen ind, når den spørger.",
+        afterPublic: ". Den spørger om nøglen og om adressen herunder: sæt dem ind.",
+      },
+      // Wording as on the iPhone (Richard's screenshot, iOS 27, 2026-11-18).
+      scripts: {
+        before: "Én gang: ",
+        path: "Indstillinger → Apps → Genveje → Avanceret",
+        middle: ", slå ",
+        toggle: "Tillad afvikling af instrukser",
+        after: " til. Ellers kan genvejen ikke læse siden i Safari.",
+      },
       step4: {
         before: "Står du på en vare: ",
         share: "Del",
@@ -82,6 +96,16 @@ export const settings = {
     unsigned: "Lav en nøgle her, og byg genvejen som beskrevet nedenfor. Nøglen vises kun én gang.",
     deleteKey: "Slet nøglen",
     download: "Hent genvejen",
+    downloadInSafari: "Genvejen hentes i Safari, ikke her i appen. Kopiér adressen, sæt den ind i Safari, og tryk Hent genvejen dér.",
+    copySettingsAddress: "Kopiér adressen",
+    publicLink: { address: "Adressen, som genvejen spørger om:" },
+    link: {
+      summary: "Del genvejen med et iCloud-link",
+      intro:
+        "Har du genvejen på din iPhone, så del den: Genveje → hold fingeren på genvejen → Del → Kopiér iCloud-link, og sæt linket ind her. Så henter de andre den med ét tryk, også fra hjemmeskærmen. Din nøgle kommer ikke med.",
+      save: "Gem",
+      clearHint: "Tøm feltet og tryk Gem for at fjerne linket.",
+    },
     buildYourself: "Eller byg den selv",
     howToBuild: "Sådan bygger du genvejen",
     build: {

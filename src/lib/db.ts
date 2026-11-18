@@ -192,6 +192,22 @@ export function householdLanguage(): string | null {
   }
 }
 
+/**
+ * The Shortcut as an iCloud link, set by an adult under Indstillinger. Preferred
+ * over the file: an iCloud link opens straight in the Shortcuts app, needs no
+ * signing, and works from the Home Screen app, where a download strands the
+ * user (WebKit bug 236943).
+ */
+export function shortcutLink(): string | null {
+  const row = db().prepare("SELECT value FROM settings WHERE key = 'shortcut_link'").get() as { value: string } | undefined;
+  return row?.value ?? null;
+}
+
+export function setShortcutLink(url: string | null): void {
+  if (url === null) db().prepare("DELETE FROM settings WHERE key = 'shortcut_link'").run();
+  else db().prepare("INSERT INTO settings (key, value) VALUES ('shortcut_link', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(url);
+}
+
 export function setHouseholdLanguage(code: string): void {
   db()
     .prepare("INSERT INTO settings (key, value) VALUES ('language', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { isLocale } from "@/i18n";
+import { iCloudShortcutLink } from "@/lib/text";
 import { getT } from "@/i18n/server";
 import * as db from "@/lib/db";
 import { MIN_PASSWORD_LENGTH, hashPassword, verifyPassword } from "@/lib/password";
@@ -364,6 +365,18 @@ export async function clearReservationAction(form: FormData): Promise<void> {
 export async function rotateFamilyLinkAction(): Promise<void> {
   await requireAdult();
   db.rotateFamilyToken();
+  revalidatePath("/indstillinger");
+}
+
+/** The Shortcut's iCloud link (Indstillinger); empty removes it. */
+export async function setShortcutLinkAction(form: FormData): Promise<void> {
+  await requireAdult();
+  const raw = String(form.get("link") ?? "");
+  if (!raw.trim()) db.setShortcutLink(null);
+  else {
+    const link = iCloudShortcutLink(raw);
+    if (link) db.setShortcutLink(link);
+  }
   revalidatePath("/indstillinger");
 }
 

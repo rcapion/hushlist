@@ -16,6 +16,26 @@ export function findUrl(input: string): { url: string; raw: string } | null {
   }
 }
 
+/**
+ * The page's own address, from the head the Safari Shortcut sends: og:url, then
+ * the canonical link, then a JSON-LD "url". For when the Shortcut's own link
+ * field arrives empty (seen on an iPhone, 2026-11-18). Only http(s).
+ */
+export function urlFromPageHead(html: string): string | null {
+  const candidates = [
+    html.match(/<meta[^>]+property=["']og:url["'][^>]*content=["']([^"']+)["']/i)?.[1],
+    html.match(/<meta[^>]+content=["']([^"']+)["'][^>]*property=["']og:url["']/i)?.[1],
+    html.match(/<link[^>]+rel=["']canonical["'][^>]*href=["']([^"']+)["']/i)?.[1],
+    html.match(/"url"\s*:\s*"(https?:\/\/[^"]+)"/i)?.[1],
+  ];
+  for (const raw of candidates) {
+    if (!raw) continue;
+    const found = findUrl(raw.replace(/&amp;/g, "&"));
+    if (found) return found.url;
+  }
+  return null;
+}
+
 export function extractUrl(input: string): string | null {
   return findUrl(input)?.url ?? null;
 }

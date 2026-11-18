@@ -60,15 +60,29 @@ export const settings: Messages["settings"] = {
   iphone: {
     title: "Wish from your iPhone",
     intro: "A shortcut in the Share menu: share an item from Safari or a shop's app, and it lands on a list.",
-    shortcutName: "Hushlist",
+    shortcutName: "Add to Hushlist",
     signed: {
       step1: { before: "Tap ", key: "Make a key", middle: " below, and tap ", copy: "Copy", after: ". The key is only shown once." },
       step2: {
         before: "Tap ",
         get: "Get the shortcut",
         after: ", and open the file. If it doesn't open by itself, it is in Safari's downloads (the arrow in the address bar).",
+        afterLink: ". It opens in Shortcuts.",
       },
-      step3: { before: "Tap ", add: "Add Shortcut", after: ", and paste the key when it asks." },
+      step3: {
+        before: "Tap ",
+        add: "Add Shortcut",
+        after: ", and paste the key when it asks.",
+        afterPublic: ". It asks for the key and for the address below: paste them in.",
+      },
+      // Apple's English label (support.apple.com/guide/shortcuts/apdfeb05586f).
+      scripts: {
+        before: "Once: ",
+        path: "Settings → Apps → Shortcuts → Advanced",
+        middle: ", turn on ",
+        toggle: "Allow Running Scripts",
+        after: ". Otherwise the shortcut cannot read the page in Safari.",
+      },
       step4: {
         before: "On an item: ",
         share: "Share",
@@ -80,6 +94,16 @@ export const settings: Messages["settings"] = {
     unsigned: "Make a key here, and build the shortcut as described below. The key is only shown once.",
     deleteKey: "Delete the key",
     download: "Get the shortcut",
+    downloadInSafari: "The shortcut is downloaded in Safari, not here in the app. Copy the address, paste it into Safari, and tap Get the shortcut there.",
+    copySettingsAddress: "Copy the address",
+    publicLink: { address: "The address the shortcut asks for:" },
+    link: {
+      summary: "Share the shortcut with an iCloud link",
+      intro:
+        "If you have the shortcut on your iPhone, share it: Shortcuts → touch and hold the shortcut → Share → Copy iCloud Link, and paste the link here. Then the others get it with one tap, from the Home Screen too. Your key is not included.",
+      save: "Save",
+      clearHint: "Empty the field and tap Save to remove the link.",
+    },
     buildYourself: "Or build it yourself",
     howToBuild: "How to build the shortcut",
     build: {

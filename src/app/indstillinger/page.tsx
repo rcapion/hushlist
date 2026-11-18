@@ -11,17 +11,20 @@ import {
   revokeApiKeyAction,
   rotateFamilyLinkAction,
   setLanguageAction,
+  setShortcutLinkAction,
 } from "@/app/actions";
 import { ApiKeyForm, InviteButton, PasswordForm } from "@/components/settings-forms";
 import { BookmarkletLink } from "@/components/bookmarklet-link";
 import { BirthdayForm } from "@/components/birthday-form";
 import { ConfirmButton } from "@/components/confirm-button";
 import { DeviceOnly } from "@/components/device-only";
+import { ShortcutDownload } from "@/components/shortcut-download";
 import { ImportForm } from "@/components/import-form";
 import { CopyButton } from "@/components/copy-button";
 import { SubmitButton } from "@/components/submit-button";
-import { familyToken, hasApiKey, listPeople, signedShortcutPath } from "@/lib/db";
+import { familyToken, hasApiKey, listPeople, shortcutLink, signedShortcutPath } from "@/lib/db";
 import { bookmarklet } from "@/lib/bookmarklet";
+import { PUBLIC_SHORTCUT_LINKS } from "@/lib/shortcut";
 import { publicOrigin, requireMember } from "@/lib/session";
 import { canManage } from "@/lib/visibility";
 import { LOCALES } from "@/i18n";
@@ -149,6 +152,12 @@ export default async function Settings(props: PageProps<"/indstillinger">) {
     );
   }
 
+  // The Shortcut: the household's own iCloud link, else the shared one (which
+  // asks for this address on import), else the signed file.
+  const ownLink = shortcutLink();
+  const publicLink = ownLink ? null : (PUBLIC_SHORTCUT_LINKS[getLocale()] ?? null);
+  const link = ownLink ?? publicLink;
+  const shortcutReady = Boolean(link) || hasSignedShortcut();
   const origin = await publicOrigin();
   const familyLink = `${origin}/f/${familyToken()}`;
   const people = listPeople();
@@ -236,16 +245,19 @@ export default async function Settings(props: PageProps<"/indstillinger">) {
       <ForDevice on="ios" all={all}>
         <Section title={i.title}>
           <p className="mb-3 text-sm text-muted">{i.intro}</p>
-          {hasSignedShortcut() ? (
+          {shortcutReady ? (
             <ol className="mb-4 list-decimal space-y-1.5 pl-5 text-sm">
               <li>
                 {i.signed.step1.before}<b>{i.signed.step1.key}</b>{i.signed.step1.middle}<b>{i.signed.step1.copy}</b>{i.signed.step1.after}
               </li>
               <li>
-                {i.signed.step2.before}<b>{i.signed.step2.get}</b>{i.signed.step2.after}
+                {i.signed.step2.before}<b>{i.signed.step2.get}</b>{link ? i.signed.step2.afterLink : i.signed.step2.after}
               </li>
               <li>
-                {i.signed.step3.before}<b>{i.signed.step3.add}</b>{i.signed.step3.after}
+                {i.signed.step3.before}<b>{i.signed.step3.add}</b>{publicLink ? i.signed.step3.afterPublic : i.signed.step3.after}
+              </li>
+              <li>
+                {i.signed.scripts.before}<b>{i.signed.scripts.path}</b>{i.signed.scripts.middle}<b>{i.signed.scripts.toggle}</b>{i.signed.scripts.after}
               </li>
               <li>
                 {i.signed.step4.before}<b>{i.signed.step4.share}</b> → <b>{i.shortcutName}</b>{i.signed.step4.middle}
@@ -261,14 +273,34 @@ export default async function Settings(props: PageProps<"/indstillinger">) {
               <SubmitButton className="btn btn-ghost !px-0 text-sm">{i.deleteKey}</SubmitButton>
             </form>
           )}
-          {hasSignedShortcut() && (
-            <a href="/hushlist.shortcut" download={`${i.shortcutName}.shortcut`} className="btn btn-outline mt-3 text-sm">
+          {publicLink && (
+            <div className="mt-3 text-sm">
+              <p className="text-muted">{i.publicLink.address}</p>
+              <div className="mt-1 flex gap-2">
+                <input readOnly value={origin} className="field font-mono text-sm" />
+                <CopyButton text={origin} className="!px-3 !py-1.5" />
+              </div>
+            </div>
+          )}
+          {link ? (
+            <a href={link} className="btn btn-outline mt-3 text-sm">
               {i.download}
             </a>
+          ) : (
+            hasSignedShortcut() && <ShortcutDownload settingsUrl={`${origin}/indstillinger`} />
           )}
           <details className="mt-4 text-sm">
+            <summary className="cursor-pointer text-muted">{i.link.summary}</summary>
+            <p className="mt-3">{i.link.intro}</p>
+            <form action={setShortcutLinkAction} className="mt-3 flex gap-2">
+              <input name="link" type="url" inputMode="url" defaultValue={link ?? ""} className="field text-sm" placeholder="https://www.icloud.com/shortcuts/…" />
+              <SubmitButton className="btn btn-outline text-sm">{i.link.save}</SubmitButton>
+            </form>
+            {link && <p className="mt-2 text-muted">{i.link.clearHint}</p>}
+          </details>
+          <details className="mt-4 text-sm">
             <summary className="cursor-pointer text-muted">
-              {hasSignedShortcut() ? i.buildYourself : i.howToBuild}
+              {shortcutReady ? i.buildYourself : i.howToBuild}
             </summary>
             <ol className="mt-3 list-decimal space-y-1.5 pl-5">
               <li>{i.build.step1.before}<b>{i.build.step1.shareSheet}</b>{i.build.step1.after}</li>
@@ -279,7 +311,7 @@ export default async function Settings(props: PageProps<"/indstillinger">) {
             </ol>
           </details>
           {/* The downloaded Shortcut reads the page itself; only a hand-built one needs this. */}
-          {!hasSignedShortcut() && (
+          {!shortcutReady && (
             <details className="mt-3 text-sm">
               <summary className="cursor-pointer text-muted">{i.safari.summary}</summary>
               <p className="mt-3">{i.safari.intro}</p>

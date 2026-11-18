@@ -1,0 +1,89 @@
+# Hushlist behind a Cloudflare Tunnel — the setup the app was built and is
+# run with. README.md in this directory walks through it.
+#
+#   cp .env.example .env      # then fill it in
+#   mkdir -p data && sudo chown 1000:1000 data
+#   docker compose up -d --build
+#
+# Three containers on two networks:
+#   inside   internal: no route anywhere. The app lives only here.
+#   outside  the internet. Only the proxy out and the tunnel in are on it.
+# So the app has no published port and cannot reach your LAN, NAS or router,
+# even if it were compromised. The family reaches it through the tunnel; it
+# reaches shop pages through hushlist-egress.
+
+services:
+  hushlist:
+    build: ../..
+    image: hushlist:local
+    container_name: hushlist
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 20s
+    environment:
+      TZ: ${HUSHLIST_TIMEZONE:-Europe/Copenhagen}
+      HUSHLIST_TIMEZONE: ${HUSHLIST_TIMEZONE:-Europe/Copenhagen}
+      HUSHLIST_PUBLIC_URL: ${HUSHLIST_PUBLIC_URL:-}
+      HUSHLIST_LANGUAGE: ${HUSHLIST_LANGUAGE:-}
+      HUSHLIST_LINK_CHECK: ${HUSHLIST_LINK_CHECK:-on}
+      HUSHLIST_EGRESS_PROXY: http://hushlist-egress:3128
+    volumes:
+      - ${HUSHLIST_DATA:-./data}:/data
+    networks: [inside]
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          pids: 256
+
+  hushlist-egress:
+    image: ubuntu/squid:6.6-24.04_edge@sha256:8a3baed477e2c282ab8aa5edad442f69873246964f225c5c2ae8364b6610963c
+    container_name: hushlist-egress
+    restart: unless-stopped
+    user: "13:13"
+    entrypoint: ["squid", "-N", "-f", "/etc/squid/hushlist.conf"]
+    volumes:
+      - ../squid.conf:/etc/squid/hushlist.conf:ro
+    networks: [inside, outside]
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          pids: 64
+
+  hushlist-tunnel:
+    image: cloudflare/cloudflared:2026.11.0@sha256:b94b96edf2c9c4360f8879c8580cfaa99077f19c849ec595ca2f711b27d4f344
+    container_name: hushlist-tunnel
+    restart: unless-stopped
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      # From the Cloudflare dashboard (README.md). It is a secret: .env only.
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN in .env}
+    depends_on: [hushlist]
+    networks: [inside, outside]
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          pids: 64
+
+networks:
+  inside:
+    internal: true
+  outside: {}

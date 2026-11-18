@@ -6,8 +6,9 @@ setup has to provide. The three examples in `deploy/` are worked answers to it.
 
 ## What any setup must provide
 
-1. **The image, built from this repository.** `docker build -t hushlist .`
-   The build downloads npm packages and one font, so it needs the internet.
+1. **The image.** Released ones are `ghcr.io/rcapion/hushlist:<version>`
+   (amd64, arm64). Or build it from this repository, `docker build -t hushlist .`;
+   the build downloads npm packages and one font, so it needs the internet.
 2. **A writable `/data`** for uid 1000. Use a bind mount (`./data:/data`) or a
    named volume. A bind mount is easier to back up and to inspect.
 3. **HTTPS in front, for the family.** Guests open the family link on their

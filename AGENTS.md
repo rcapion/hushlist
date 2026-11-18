@@ -7,9 +7,11 @@ when you get to them.
 
 ## What you are setting up
 
-- One Docker container running a Next.js server on port 3000. The image is
-  built from this repository (`Dockerfile`). No image is published, so build
-  it.
+- One Docker container running a Next.js server on port 3000, from the
+  released image `ghcr.io/rcapion/hushlist:<version>` (amd64 and arm64; the
+  versions are in `CHANGELOG.md` and on the GitHub Releases page). **Pin a
+  version, not `latest`.** Building it from this repository (`Dockerfile`)
+  works too, if the user prefers that or runs an unreleased change.
 - One data directory mounted at `/data`. It holds the SQLite database, the
   uploaded pictures and `backup/hushlist.db`. The container runs as uid 1000,
   so that uid must be able to write to the directory.
@@ -119,12 +121,17 @@ place as `data/hushlist.db`, delete any `hushlist.db-wal` and
 
 ## 6. Updating
 
+Read the new version's section in `CHANGELOG.md` first: before 1.0 a version
+may say under **Upgrading** that something has to change. Then take a backup
+(step 5), change the version in `compose.yaml`, and:
+
 ```sh
-git pull
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 ```
 
-The database migrates itself at start. Take a backup first (step 5).
+The database migrates itself at start. To go back, set the old version again
+and restore the backup if the new one migrated the database.
 
 ## Optional extras
 
@@ -155,4 +162,4 @@ The database migrates itself at start. Take a backup first (step 5).
 | Links in Settings show `http://hushlist:3000/…` | `HUSHLIST_PUBLIC_URL` is not set and the proxy sends no `X-Forwarded-Host` |
 | Login works, then you are logged out at once | Secure cookies over plain http: set `HUSHLIST_PUBLIC_URL` to the address actually used |
 | Pasted links never get a title or picture | No egress: check `/api/health?egress=1` (step 3). Some shops (H&M, for example) refuse servers, and the wish then keeps the typed text |
-| `docker compose up --build` fails at `npm run build` fetching a font | The build needs the internet (next/font downloads Source Serif 4) |
+| Building it yourself (`build: ../..`) fails at `npm run build` fetching a font | The build needs the internet (next/font downloads Source Serif 4) |

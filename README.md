@@ -108,6 +108,9 @@ be hosted however you like. Three worked examples:
 | [`deploy/tailscale-funnel`](deploy/tailscale-funnel) | `https://wishes.your-tailnet.ts.net`, with the same isolation | A Tailscale account (free plan) |
 | [`deploy/lan`](deploy/lan) | `http://your-server:3000`, to try it or to put behind a reverse proxy you already run | Docker |
 
+The examples run the released image, `ghcr.io/rcapion/hushlist:<version>`
+(amd64 and arm64). [Releases](https://github.com/rcapion/hushlist/releases)
+and [CHANGELOG.md](CHANGELOG.md) list the versions.
 [docs/HOSTING.md](docs/HOSTING.md) covers what any other setup must provide.
 [docs/CONFIGURATION.md](docs/CONFIGURATION.md) covers every setting.
 

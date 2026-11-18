@@ -35,8 +35,9 @@ page covers what the app does about that, and what the host has to do.
 
 - Use HTTPS only, through a tunnel or a proxy. Never publish port 3000 on the
   router.
-- Keep it updated (`git pull && docker compose up -d --build`). Next.js
-  security releases matter for anything public.
+- Keep it updated: watch the repository's releases (GitHub: Watch → Custom →
+  Releases) and move to a new version (`AGENTS.md`, step 6). Next.js security
+  releases matter for anything public.
 - Back up `data/backup/` and `data/images/`.
 - Optionally rate-limit POST requests at the edge (Cloudflare: a rate-limit
   rule on the hostname).

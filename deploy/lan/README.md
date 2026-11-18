@@ -5,7 +5,7 @@ it behind a reverse proxy you already run.
 
 ```sh
 mkdir -p data && sudo chown 1000:1000 data
-docker compose up -d --build
+docker compose up -d
 ```
 
 Open `http://<this machine>:3000` and set up the household.

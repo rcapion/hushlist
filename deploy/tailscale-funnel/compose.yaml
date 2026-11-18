@@ -4,7 +4,7 @@
 #
 #   cp .env.example .env      # then fill it in
 #   mkdir -p data && sudo chown 1000:1000 data
-#   docker compose up -d --build
+#   docker compose up -d
 #
 # The same shape as the Cloudflare example, with Tailscale as the way in:
 #   inside   internal: no route anywhere. The app lives only here.
@@ -15,8 +15,10 @@
 
 services:
   hushlist:
-    build: ../..
-    image: hushlist:local
+    # A released image (CHANGELOG.md). Pin the version; to update, change it
+    # and run `docker compose pull && docker compose up -d`. To build from this
+    # checkout instead, replace the line with `build: ../..`.
+    image: ghcr.io/rcapion/hushlist:0.1.0
     container_name: hushlist
     restart: unless-stopped
     init: true

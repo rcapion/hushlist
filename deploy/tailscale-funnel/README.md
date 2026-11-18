@@ -36,7 +36,7 @@ cp .env.example .env
 
 ```sh
 mkdir -p data && sudo chown 1000:1000 data
-docker compose up -d --build
+docker compose up -d
 docker compose ps              # three containers; hushlist "healthy" after ~30 s
 docker compose logs hushlist-tailscale --tail 30
 ```

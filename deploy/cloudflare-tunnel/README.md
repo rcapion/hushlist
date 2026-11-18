@@ -26,7 +26,7 @@ so if a menu has changed, follow their guide "Create a tunnel (dashboard)".
 
 ```sh
 mkdir -p data && sudo chown 1000:1000 data
-docker compose up -d --build
+docker compose up -d
 docker compose ps        # three containers; hushlist "healthy" after ~30 s
 ```
 

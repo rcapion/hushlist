@@ -5,6 +5,10 @@ list. Close family reserve gifts through one secret link, so nobody buys the
 same thing twice. **Nobody can see what has been reserved on their own list**,
 so the surprise holds. That is the hush in the name.
 
+<p align="center">
+  <img src="docs/screenshots/demo.gif" width="320" alt="Grandma opens the family link, types her first name and reserves the headphones on Sam's list. Sam then opens his own list, and nothing shows that they have been reserved.">
+</p>
+
 ## Why host your own
 
 A wishlist is a detailed record of a family: names, birthdays, ages, and what
